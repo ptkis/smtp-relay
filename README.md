@@ -15,7 +15,7 @@ docker run --rm -it -p 2525:25 \
 	-e TX_SMTP_RELAY_MYHOSTNAME=tx-smtp-relay.yourhost.com \
 	-e TX_SMTP_RELAY_USERNAME=username \
 	-e TX_SMTP_RELAY_PASSWORD=password \
-	applariat/tx-smtp-relay
+	djjudas21/tx-smtp-relay
 
 ```
 Send a test message

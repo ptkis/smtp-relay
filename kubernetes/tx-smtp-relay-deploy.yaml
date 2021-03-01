@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: tx-smtp-relay
-          image: applariat/tx-smtp-relay
+          image: djjudas21/tx-smtp-relay
           env:
             - name: TX_SMTP_RELAY_HOST
               valueFrom:
