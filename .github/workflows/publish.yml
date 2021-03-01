@@ -1,0 +1,24 @@
+---
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Parse the git tag
+        id: get_tag
+        run: echo ::set-output name=TAG::$(echo $GITHUB_REF | cut -d / -f 3)
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v1
+        with:
+          username: djjudas21
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: djjudas21/tx-smtp-relay
+          tag_with_ref: true
+          tags: latest
