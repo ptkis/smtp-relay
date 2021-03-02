@@ -1,9 +1,0 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: global-env
-data:
-  tx-smtp-relay-host: "[smtp.sendgrid.net]:587"
-  tx-smtp-relay-myhostname: tx-smtp.example.com
-  tx-smtp-relay-username: your-sendgrid-user
