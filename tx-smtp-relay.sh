@@ -5,6 +5,8 @@ TX_SMTP_RELAY_MYHOSTNAME=${TX_SMTP_RELAY_MYHOSTNAME?Missing env var TX_SMTP_RELA
 TX_SMTP_RELAY_USERNAME=${TX_SMTP_RELAY_USERNAME?Missing env var TX_SMTP_RELAY_USERNAME}
 TX_SMTP_RELAY_PASSWORD=${TX_SMTP_RELAY_PASSWORD?Missing env var TX_SMTP_RELAY_PASSWORD}
 TX_SMTP_RELAY_MYNETWORKS=${TX_SMTP_RELAY_MYNETWORKS?Missing env var TX_SMTP_RELAY_MYNETWORKS}
+TX_SMTP_RELAY_WRAPPERMODE=${TX_SMTP_RELAY_WRAPPERMODE?Missing env var TX_SMTP_RELAY_WRAPPERMODE}
+TX_SMTP_TLS_SECURITY_LEVEL=${TX_SMTP_TLS_SECURITY_LEVEL?Missing env var TX_SMTP_TLS_SECURITY_LEVEL}
 
 
 # handle sasl
@@ -20,6 +22,8 @@ postconf 'smtp_sasl_security_options =' || exit 1
 postconf "relayhost = ${TX_SMTP_RELAY_HOST}" || exit 1
 postconf "myhostname = ${TX_SMTP_RELAY_MYHOSTNAME}" || exit 1
 postconf "mynetworks = ${TX_SMTP_RELAY_MYNETWORKS}" || exit 1
+postconf "smtp_tls_wrappermode = ${TX_SMTP_RELAY_WRAPPERMODE}" || exit 1
+postconf "smtp_tls_security_level = ${TX_SMTP_TLS_SECURITY_LEVEL}" || exit 1
 
 # http://www.postfix.org/COMPATIBILITY_README.html#smtputf8_enable
 postconf 'smtputf8_enable = no' || exit 1
