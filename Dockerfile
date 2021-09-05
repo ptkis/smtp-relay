@@ -1,4 +1,4 @@
-FROM alpine:3.13
+FROM alpine
 LABEL maintainer "Jonathan Gazeley"
 
 RUN apk add --no-cache postfix rsyslog supervisor \
