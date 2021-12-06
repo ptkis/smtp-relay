@@ -8,4 +8,4 @@ COPY . /
 
 EXPOSE 25
 
-ENTRYPOINT [ "/tx-smtp-relay.sh" ]
+ENTRYPOINT [ "/smtp-relay.sh" ]
