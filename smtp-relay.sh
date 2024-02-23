@@ -34,4 +34,5 @@ postconf 'always_add_missing_headers = yes' || exit 1
 # Log to stdout
 postconf 'maillog_file = /dev/stdout' || exit 1
 
-/usr/bin/supervisord -n
+# Start postfix
+postfix start-fg
