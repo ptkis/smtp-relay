@@ -31,4 +31,8 @@ postconf 'smtputf8_enable = no' || exit 1
 # This makes sure the message id is set. If this is set to no dkim=fail will happen.
 postconf 'always_add_missing_headers = yes' || exit 1
 
-/usr/bin/supervisord -n
+# Log to stdout
+postconf 'maillog_file = /dev/stdout' || exit 1
+
+# Start postfix
+postfix start-fg
