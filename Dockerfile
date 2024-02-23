@@ -1,7 +1,7 @@
 FROM alpine:3.19
 LABEL maintainer "Jonathan Gazeley"
 
-RUN apk add --no-cache postfix rsyslog supervisor \
+RUN apk add --no-cache postfix supervisor \
     && /usr/bin/newaliases
 
 COPY . /
