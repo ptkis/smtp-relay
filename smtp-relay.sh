@@ -11,7 +11,7 @@ SMTP_TLS_SECURITY_LEVEL=${SMTP_TLS_SECURITY_LEVEL?Missing env var SMTP_TLS_SECUR
 
 # handle sasl
 mkdir -p /etc/postfix/sasl
-[ -w /etc/postfix/sasl/sasl_passwd ] && echo "${SMTP_RELAY_HOST} ${SMTP_RELAY_USERNAME}:${SMTP_RELAY_PASSWORD}" > /etc/postfix/sasl/sasl_passwd
+echo "${SMTP_RELAY_HOST} ${SMTP_RELAY_USERNAME}:${SMTP_RELAY_PASSWORD}" > /etc/postfix/sasl/sasl_passwd || exit 1
 postmap /etc/postfix/sasl/sasl_passwd || exit 1
 
 postconf 'smtp_sasl_auth_enable = yes' || exit 1
