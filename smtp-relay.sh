@@ -7,6 +7,8 @@ SMTP_RELAY_PASSWORD=${SMTP_RELAY_PASSWORD?Missing env var SMTP_RELAY_PASSWORD}
 SMTP_RELAY_MYNETWORKS=${SMTP_RELAY_MYNETWORKS?Missing env var SMTP_RELAY_MYNETWORKS}
 SMTP_RELAY_WRAPPERMODE=${SMTP_RELAY_WRAPPERMODE?Missing env var SMTP_RELAY_WRAPPERMODE}
 SMTP_TLS_SECURITY_LEVEL=${SMTP_TLS_SECURITY_LEVEL?Missing env var SMTP_TLS_SECURITY_LEVEL}
+# Message Size Limit
+SMTP_MESSAGE_SIZE_LIMIT=${SMTP_MESSAGE_SIZE_LIMIT?Missing env var SMTP_MESSAGE_SIZE_LIMIT}
 
 
 # handle sasl
@@ -24,6 +26,8 @@ postconf "myhostname = ${SMTP_RELAY_MYHOSTNAME}" || exit 1
 postconf "mynetworks = ${SMTP_RELAY_MYNETWORKS}" || exit 1
 postconf "smtp_tls_wrappermode = ${SMTP_RELAY_WRAPPERMODE}" || exit 1
 postconf "smtp_tls_security_level = ${SMTP_TLS_SECURITY_LEVEL}" || exit 1
+# Message Size Limit
+postconf "message_size_limit = ${SMTP_MESSAGE_SIZE_LIMIT}" || exit 1
 
 # http://www.postfix.org/COMPATIBILITY_README.html#smtputf8_enable
 postconf 'smtputf8_enable = no' || exit 1
