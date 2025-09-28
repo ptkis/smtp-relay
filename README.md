@@ -37,7 +37,7 @@ docker run --rm -it -p 2525:25 \
 	-e SMTP_MESSAGE_SIZE_LIMIT=10240000 \
 	-e RATE_LIMIT_SENDER_PER_HOUR=500 \
 	-e RATE_LIMIT_GLOBAL_PER_HOUR=10000 \
-	djjudas21/smtp-relay
+	ptkis/smtp-relay
 
 ```
 Send a test message
