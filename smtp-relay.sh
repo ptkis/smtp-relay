@@ -10,6 +10,12 @@ SMTP_TLS_SECURITY_LEVEL=${SMTP_TLS_SECURITY_LEVEL?Missing env var SMTP_TLS_SECUR
 # Message Size Limit
 SMTP_MESSAGE_SIZE_LIMIT=${SMTP_MESSAGE_SIZE_LIMIT?Missing env var SMTP_MESSAGE_SIZE_LIMIT}
 
+# Optional rate limits (per hour)
+# Limit messages per hour per sender address (MAIL FROM)
+RATE_LIMIT_SENDER_PER_HOUR=${RATE_LIMIT_SENDER_PER_HOUR:-}
+# Limit total messages per hour across the whole instance
+RATE_LIMIT_GLOBAL_PER_HOUR=${RATE_LIMIT_GLOBAL_PER_HOUR:-}
+
 
 # handle sasl
 mkdir -p /etc/postfix/sasl
@@ -28,6 +34,33 @@ postconf "smtp_tls_wrappermode = ${SMTP_RELAY_WRAPPERMODE}" || exit 1
 postconf "smtp_tls_security_level = ${SMTP_TLS_SECURITY_LEVEL}" || exit 1
 # Message Size Limit
 postconf "message_size_limit = ${SMTP_MESSAGE_SIZE_LIMIT}" || exit 1
+
+# Configure postfwd for rate limiting if requested
+if [ -n "${RATE_LIMIT_SENDER_PER_HOUR}" ] || [ -n "${RATE_LIMIT_GLOBAL_PER_HOUR}" ]; then
+    mkdir -p /etc/postfix /var/lib/postfwd || exit 1
+    POSTFWD_RULES_FILE=/etc/postfix/postfwd.cf
+    : > "${POSTFWD_RULES_FILE}" || exit 1
+
+    # Per-sender hourly rate limit
+    if [ -n "${RATE_LIMIT_SENDER_PER_HOUR}" ]; then
+        printf "%s\n" "id=rate_sender; action=rate(sender/${RATE_LIMIT_SENDER_PER_HOUR}/3600/450 4.7.1 Rate limit exceeded for sender $$sender)" >> "${POSTFWD_RULES_FILE}" || exit 1
+    fi
+
+    # Global hourly rate limit (single shared bucket)
+    if [ -n "${RATE_LIMIT_GLOBAL_PER_HOUR}" ]; then
+        printf "%s\n" "id=rate_global; action=rate(global/${RATE_LIMIT_GLOBAL_PER_HOUR}/3600/450 4.7.1 Global hourly rate limit exceeded)" >> "${POSTFWD_RULES_FILE}" || exit 1
+    fi
+
+    # Start postfwd policy daemon
+    postfwd --daemon --interface 127.0.0.1 --port 10040 \
+        --file "${POSTFWD_RULES_FILE}" \
+        --logfile /dev/stdout \
+        --cache 10000 \
+        --save_rates /var/lib/postfwd/rates.db || exit 1
+
+    # Wire policy service into recipient restrictions
+    postconf "smtpd_recipient_restrictions = check_policy_service inet:127.0.0.1:10040, permit_mynetworks, reject_unauth_destination" || exit 1
+fi
 
 # http://www.postfix.org/COMPATIBILITY_README.html#smtputf8_enable
 postconf 'smtputf8_enable = no' || exit 1
