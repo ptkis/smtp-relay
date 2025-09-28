@@ -26,7 +26,7 @@ jobs:
           dockerfile: Dockerfile
 
       - name: Shellcheck
-        uses: ludeeus/action-shellcheck@v2
+        uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: .
 
