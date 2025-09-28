@@ -7,7 +7,7 @@ open relay service to your cluster. This means you don't have to configure all o
  
 ## Config
 
-This image supports the following enironment variables. All are **required**.
+This image supports the following environment variables. All are **required**, unless marked optional.
 
 
 | Variable                   | Use                                                                 | Example                   |
@@ -19,7 +19,9 @@ This image supports the following enironment variables. All are **required**.
 | `SMTP_RELAY_MYNETWORKS`    | Comma-separated list of local networks that can use this SMTP relay | `127.0.0.0/8,10.0.0.0/8`  |
 | `SMTP_RELAY_WRAPPERMODE`   | Request postfix connects using SUBMISSIONS/SMTPS protocol instead of STARTTLS | `no`                      |
 | `SMTP_TLS_SECURITY_LEVEL`  | default SMTP TLS security level for the Postfix SMTP client         | `""`                      |
-| `SMTP_MESSAGE_SIZE_LIMIT`  | default SMTP message_size_limit (Example: 10MB)      		   | `10240000`                |
+| `SMTP_MESSAGE_SIZE_LIMIT`  | default SMTP message_size_limit (Example: 10MB)       		   | `10240000`                |
+| `RATE_LIMIT_SENDER_PER_HOUR` (optional) | max messages per hour per sender (MAIL FROM) | `500` |
+| `RATE_LIMIT_GLOBAL_PER_HOUR` (optional) | max total messages per hour across instance  | `10000` |
 
 # Quickstart
 Run on docker
@@ -33,7 +35,9 @@ docker run --rm -it -p 2525:25 \
 	-e SMTP_RELAY_WRAPPERMODE=no \
 	-e SMTP_TLS_SECURITY_LEVEL="" \
 	-e SMTP_MESSAGE_SIZE_LIMIT=10240000 \
-	djjudas21/smtp-relay
+	-e RATE_LIMIT_SENDER_PER_HOUR=500 \
+	-e RATE_LIMIT_GLOBAL_PER_HOUR=10000 \
+	ghcr.io/ptkis/smtp-relay:vX.Y.Z
 
 ```
 Send a test message
