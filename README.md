@@ -19,9 +19,11 @@ This image supports the following environment variables. All are **required**, u
 | `SMTP_RELAY_MYNETWORKS`    | Comma-separated list of local networks that can use this SMTP relay | `127.0.0.0/8,10.0.0.0/8`  |
 | `SMTP_RELAY_WRAPPERMODE`   | Request postfix connects using SUBMISSIONS/SMTPS protocol instead of STARTTLS | `no`                      |
 | `SMTP_TLS_SECURITY_LEVEL`  | default SMTP TLS security level for the Postfix SMTP client         | `""`                      |
-| `SMTP_MESSAGE_SIZE_LIMIT`  | default SMTP message_size_limit (Example: 10MB)       		   | `10240000`                |
+| `SMTP_MESSAGE_SIZE_LIMIT`  | default SMTP message_size_limit (Example: 10MB)       	   | `10240000`                |
 | `RATE_LIMIT_SENDER_PER_HOUR` (optional) | max messages per hour per sender (MAIL FROM) | `500` |
 | `RATE_LIMIT_GLOBAL_PER_HOUR` (optional) | max total messages per hour across instance  | `10000` |
+| `BLOCKED_RECIPIENT_EMAILS` (optional) | Comma-separated list of recipient email addresses to reject | `abuse@example.com,support@example.com` |
+| `BLOCKED_RECIPIENT_DOMAINS` (optional) | Comma-separated list of recipient domains to reject (matches subdomains) | `example.com,bad.tld` |
 
 # Quickstart
 Run on docker
@@ -37,6 +39,8 @@ docker run --rm -it -p 2525:25 \
 	-e SMTP_MESSAGE_SIZE_LIMIT=10240000 \
 	-e RATE_LIMIT_SENDER_PER_HOUR=500 \
 	-e RATE_LIMIT_GLOBAL_PER_HOUR=10000 \
+	-e BLOCKED_RECIPIENT_EMAILS=abuse@example.com,support@example.com \
+	-e BLOCKED_RECIPIENT_DOMAINS=example.com,bad.tld \
 	ghcr.io/ptkis/smtp-relay:vX.Y.Z
 
 ```

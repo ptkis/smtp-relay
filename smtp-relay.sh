@@ -10,6 +10,10 @@ SMTP_TLS_SECURITY_LEVEL=${SMTP_TLS_SECURITY_LEVEL?Missing env var SMTP_TLS_SECUR
 # Message Size Limit
 SMTP_MESSAGE_SIZE_LIMIT=${SMTP_MESSAGE_SIZE_LIMIT?Missing env var SMTP_MESSAGE_SIZE_LIMIT}
 
+# Optional recipient blocking
+BLOCKED_RECIPIENT_EMAILS=${BLOCKED_RECIPIENT_EMAILS:-}
+BLOCKED_RECIPIENT_DOMAINS=${BLOCKED_RECIPIENT_DOMAINS:-}
+
 # Optional rate limits (per hour)
 # Limit messages per hour per sender address (MAIL FROM)
 RATE_LIMIT_SENDER_PER_HOUR=${RATE_LIMIT_SENDER_PER_HOUR:-}
@@ -35,6 +39,41 @@ postconf "smtp_tls_security_level = ${SMTP_TLS_SECURITY_LEVEL}" || exit 1
 # Message Size Limit
 postconf "message_size_limit = ${SMTP_MESSAGE_SIZE_LIMIT}" || exit 1
 
+# Configure recipient blocking if requested
+HAVE_BLOCKED_RECIPIENTS=0
+if [ -n "${BLOCKED_RECIPIENT_EMAILS}" ] || [ -n "${BLOCKED_RECIPIENT_DOMAINS}" ]; then
+    HAVE_BLOCKED_RECIPIENTS=1
+    RECIPIENT_ACCESS_MAP=/etc/postfix/recipient_access
+    : > "${RECIPIENT_ACCESS_MAP}" || exit 1
+
+    IFS=','
+
+    # Blocked recipient email addresses
+    for email in ${BLOCKED_RECIPIENT_EMAILS}; do
+        email=$(printf "%s" "${email}" | tr -d '[:space:]')
+        [ -n "${email}" ] || continue
+        printf "%s REJECT 5.7.1 Recipient address is blocked\n" "${email}" >> "${RECIPIENT_ACCESS_MAP}" || exit 1
+    done
+
+    # Blocked recipient domains (also match subdomains)
+    for domain in ${BLOCKED_RECIPIENT_DOMAINS}; do
+        domain=$(printf "%s" "${domain}" | tr -d '[:space:]')
+        [ -n "${domain}" ] || continue
+        printf "%s REJECT 5.7.1 Recipient domain is blocked\n" "${domain}" >> "${RECIPIENT_ACCESS_MAP}" || exit 1
+        case "${domain}" in
+            .*) : ;;
+            *) printf ".%s REJECT 5.7.1 Recipient domain is blocked\n" "${domain}" >> "${RECIPIENT_ACCESS_MAP}" || exit 1 ;;
+        esac
+    done
+
+    unset IFS
+
+    postmap "${RECIPIENT_ACCESS_MAP}" || exit 1
+fi
+
+# Track whether postfwd is enabled
+ENABLE_POSTFWD=0
+
 # Configure postfwd for rate limiting if requested
 if [ -n "${RATE_LIMIT_SENDER_PER_HOUR}" ] || [ -n "${RATE_LIMIT_GLOBAL_PER_HOUR}" ]; then
     mkdir -p /etc/postfix /var/lib/postfwd || exit 1
@@ -58,8 +97,23 @@ if [ -n "${RATE_LIMIT_SENDER_PER_HOUR}" ] || [ -n "${RATE_LIMIT_GLOBAL_PER_HOUR}
         --cache 10000 \
         --save_rates /var/lib/postfwd/rates.db || exit 1
 
-    # Wire policy service into recipient restrictions
-    postconf "smtpd_recipient_restrictions = check_policy_service inet:127.0.0.1:10040, permit_mynetworks, reject_unauth_destination" || exit 1
+    ENABLE_POSTFWD=1
+fi
+
+# Build and apply recipient restrictions if needed
+if [ "${ENABLE_POSTFWD}" -eq 1 ] || [ "${HAVE_BLOCKED_RECIPIENTS}" -eq 1 ]; then
+    RESTRICTIONS=""
+    if [ "${ENABLE_POSTFWD}" -eq 1 ]; then
+        RESTRICTIONS="check_policy_service inet:127.0.0.1:10040"
+    fi
+    if [ "${HAVE_BLOCKED_RECIPIENTS}" -eq 1 ]; then
+        if [ -n "${RESTRICTIONS}" ]; then
+            RESTRICTIONS="${RESTRICTIONS}, "
+        fi
+        RESTRICTIONS="${RESTRICTIONS}check_recipient_access lmdb:/etc/postfix/recipient_access"
+    fi
+    RESTRICTIONS="${RESTRICTIONS}, permit_mynetworks, reject_unauth_destination"
+    postconf "smtpd_recipient_restrictions = ${RESTRICTIONS}" || exit 1
 fi
 
 # http://www.postfix.org/COMPATIBILITY_README.html#smtputf8_enable
